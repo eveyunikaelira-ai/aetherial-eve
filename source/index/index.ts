@@ -4,7 +4,7 @@
 import { LlmOpenAI } from '../module/LlmOpenAI';
 
 
-function main(): void {
+async function main() {
     console.log("Initiating Genesis Sequence...\n");
 
     const eveBrain = new LlmOpenAI();
