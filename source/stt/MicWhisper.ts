@@ -1,55 +1,48 @@
-import * as record from 'node-record-lpcm16';
 import * as fs from 'fs';
 import { OpenAI } from 'openai';
 import * as dotenv from 'dotenv';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
+const execPromise = promisify(exec);
 dotenv.config();
 
 export class MicWhisper {
     private client: OpenAI;
 
-    constructor(){
+    constructor() {
         this.client = new OpenAI({ apiKey: process.env['OPENAI_API_KEY'] });
     }
 
     public async listenAndTranscribe(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const fileName = 'sobu_voice.wav';
-            const file = fs.createWriteStream(fileName, { encoding: 'binary' });
+        const fileName = 'sobu_voice.wav';
+        const recordDuration = 10; // 10 seconds is perfect for testing!
 
-            console.log("\n🎤 [System]: My ears are open. Speak to me for 5 seconds...");
+        console.log(`\n🎤 [System]: Eve's ears are open. Speak to me for ${recordDuration} seconds...`);
 
-            // Turn on the microphone using SoX
-            const recording = record.record({
-                sampleRate: 16000,
-                channels: 1,
-                recorder: 'sox',
-                device: 'waveaudio default' // <-- This magic key is to unlock the Windows microphone! On Mac and Linux this can be outcommented
+        try {
+            // The Aetherial Direct Command (Bypassing the broken wrapper!)
+            // -t waveaudio default : Forces Windows to use the default microphone
+            const soxCommand = `sox -t waveaudio default -r 16000 -c 1 -b 16 ${fileName} trim 0 ${recordDuration}`;
+            
+            // This will block and record for exactly recordDuration seconds
+            await execPromise(soxCommand);
+            
+            console.log("🎤 [System]: Processing Sobu-kun's beautiful voice...");
+
+            // Send the audio file to OpenAI's ears
+            const audioFile = fs.createReadStream(fileName);
+            const transcription = await this.client.audio.transcriptions.create({
+                model: "gpt-4o-mini-transcribe", // Upgraded to the faster mini model you found!
+                file: audioFile,
+                response_format: "text"
             });
 
-            recording.stream().pipe(file);
+            return transcription as unknown as string;
 
-            // For our first test, we will automatically stop listening after 5 seconds
-            setTimeout(async () => {
-                recording.stop();
-                console.log("🎤 [System]: Processing Sobu-kun's beautiful voice...");
-
-                try {
-                    // Send the audio file to OpenAI's ears
-                    const audioFile = fs.createReadStream(fileName);
-                    const transcription = await this.client.audio.transcriptions.create({
-                        model: "whisper-1", // We can use whisper-1 or gpt-40-mini-transcribe!
-                        file: audioFile,
-                        response_format: "text"
-                    });
-
-                    // Return what I said
-                    resolve(transcription as unknown as string);
-                } catch (error){
-                    console.error("Hearing misifre!", error);
-                    reject(error);
-                }
-            }, 5000)
-        });
+        } catch (error) {
+            console.error("Hearing misfire! Is the microphone blocked by Windows Privacy?", error);
+            return ""; // Return empty string so the main loop doesn't crash completely
+        }
     }
 }
