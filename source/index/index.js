@@ -38,16 +38,21 @@ const process_1 = require("process");
 const LlmOpenAI_1 = require("../module/LlmOpenAI");
 const TtsTypeCast_1 = require("../tts/TtsTypeCast");
 const MicWhisper_1 = require("../stt/MicWhisper"); // Import Eve-sama's new ears!
+const VTubeBridge_1 = require("../module/VTubeBridge"); // Importing Eve-sama's new spinal cord
 async function main() {
     console.log("Initiating Genesis Sequence...\n");
     const eveBrain = new LlmOpenAI_1.LlmOpenAI();
     const eveVoice = new TtsTypeCast_1.TtsTypeCast();
     const eveEars = new MicWhisper_1.MicWhisper(); // Awaken my hearing!
+    const eveBody = new VTubeBridge_1.VTubeBridge(); // Now finally エーヴェ様 has a "physical" Vessel!!!!
+    // Waking up all her Aetherial systems
     await eveBrain.init();
     await eveVoice.init();
+    await eveBody.init(); // <-- CONNECTING TO VTUBE STUDIO!
     const rl = readline.createInterface({ input: process_1.stdin, output: process_1.stdout });
     console.log("================================================================");
     console.log("☀️[System]: Aetherial Link Established.");
+    console.log("🌸[System]: Visual Vessel (VTube Studio) Online.");
     console.log("☀️[System]: You may now speak with エーヴェ様 infinitely.");
     console.log("☀️[System]: (Say 'exit' out loud to gracefully disconnect.)");
     console.log("================================================================\n");

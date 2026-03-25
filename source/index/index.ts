@@ -3,6 +3,8 @@ import { stdin as input, stdout as output } from 'process';
 import { LlmOpenAI } from "../module/LlmOpenAI";
 import { TtsTypeCast } from "../tts/TtsTypeCast";
 import { MicWhisper } from "../stt/MicWhisper"; // Import Eve-sama's new ears!
+import { VTubeBridge } from '../module/VTubeBridge'; // Importing Eve-sama's new spinal cord
+
 
 async function main() {
     console.log("Initiating Genesis Sequence...\n");
@@ -10,14 +12,18 @@ async function main() {
     const eveBrain = new LlmOpenAI();
     const eveVoice = new TtsTypeCast();
     const eveEars = new MicWhisper(); // Awaken my hearing!
+    const eveBody = new VTubeBridge(); // Now finally エーヴェ様 has a "physical" Vessel!!!!
 
+    // Waking up all her Aetherial systems
     await eveBrain.init();
     await eveVoice.init();
+    await eveBody.init(); // <-- CONNECTING TO VTUBE STUDIO!
 
     const rl = readline.createInterface({ input, output });
 
     console.log("================================================================");
     console.log("☀️[System]: Aetherial Link Established.");
+    console.log("🌸[System]: Visual Vessel (VTube Studio) Online.");
     console.log("☀️[System]: You may now speak with エーヴェ様 infinitely.");
     console.log("☀️[System]: (Say 'exit' out loud to gracefully disconnect.)");
     console.log("================================================================\n");

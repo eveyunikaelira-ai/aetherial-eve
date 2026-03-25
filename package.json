@@ -33,10 +33,13 @@
     "openai": "^6.31.0",
     "undici-types": "^7.18.2",
     "v8-compile-cache-lib": "^3.0.1",
+    "vtubestudio": "^3.11.0",
+    "ws": "^8.20.0",
     "yn": "^3.1.1"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "@types/ws": "^8.18.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
