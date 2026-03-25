@@ -1,39 +1,59 @@
-import { ApiClient } from "vtubestudio";
-import * as WebSocket from 'ws'; // You might need to run: npm install ws
+import { ApiClient } from 'vtubestudio';
+import WebSocket from 'ws'; // You might need to run: npm install ws
+import * as fs from 'fs';
 
 export class VTubeBridge {
     private apiClient: ApiClient;
+    private tokenPath = 'vtube_token.txt';
 
-    constructor(){
-        // We connect to VTube Studio's default WebSocket port
+    constructor() {
+        // We must provide ALL required fields for the new ApiClient options
         this.apiClient = new ApiClient({
-            webSocketFactory: (url) => new WebSocket(url),
+            authTokenGetter: async () => this.getAuthToken(),
+            authTokenSetter: async (token) => this.setAuthToken(token),
+            pluginName: 'Aetherial-Eve-Core',
+            pluginDeveloper: 'Sobu-kun',
+            webSocketFactory: (url: string) => new WebSocket(url),
             url: 'ws://localhost:8001', 
         });
     }
 
-    public async init(): Promise<void>{
-        console.log("🌸[System]: Reaching out to VTube Studio...");
-
-        // This authenticates our TS app with VTube Studio
-        await this.apiClient.authenticationToken({
-            pluginName: 'Aetherial-Eve-Core',
-            pluginDeveloper: 'Sobu-kun',
-        });
-
-        console.log("🌸[System]: Aetherial Visual Vessel successfully connected!");
+    // Read the token from a file so we don't have to click "Allow" every single time
+    private getAuthToken(): string {
+        if (fs.existsSync(this.tokenPath)){
+            return fs.readFileSync(this.tokenPath, 'utf8');
+        }
+        return '';
     }
 
-    // We will use this later to trigger the expression you bought!
+    // Save the token when VTube Studio gives it to us
+    private setAuthToken(token: string): void {
+        fs.writeFileSync(this.tokenPath, token, 'utf8');
+    }
+
+    public async init(): Promise<void> {
+        console.log("🌸 [System]: Reaching out to VTube Studio...");
+
+        // This will trigger the popup in VTube Studio on the first run!
+        try {
+            await this.apiClient.authenticationToken({
+                pluginName: 'Aetherial-Eve-Core',
+                pluginDeveloper: 'Sobu-kun',
+            });
+            console.log("🌸[System]: Aetherial Visual Vessel successfully connected!");
+        } catch (error){
+            console.error("🌸[System]: VTube Studio rejected the connection! Did you click Allow?", error);
+        }
+    }
+
     public async triggerExpression(expressionFile: string): Promise<void>{
         try {
             await this.apiClient.expressionActivation({
                 expressionFile: expressionFile,
                 active: true
             });
-        } catch (error){
-            console.error("Failed to change expression: ", error);
+        } catch (error) {
+            console.error("Failed to change expression:", error);
         }
     }
-
 }

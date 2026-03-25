@@ -1,1 +1,1 @@
-{"version":3,"file":"VTubeBridge.d.ts","sourceRoot":"","sources":["VTubeBridge.ts"],"names":[],"mappings":"AAGA,qBAAa,WAAW;IACpB,OAAO,CAAC,SAAS,CAAY;;IAUhB,IAAI,IAAI,OAAO,CAAC,IAAI,CAAC;IAarB,iBAAiB,CAAC,cAAc,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;CAWxE"}
+{"version":3,"file":"VTubeBridge.d.ts","sourceRoot":"","sources":["VTubeBridge.ts"],"names":[],"mappings":"AAIA,qBAAa,WAAW;IACpB,OAAO,CAAC,SAAS,CAAY;IAC7B,OAAO,CAAC,SAAS,CAAqB;;IAetC,OAAO,CAAC,YAAY;IAQpB,OAAO,CAAC,YAAY;IAIP,IAAI,IAAI,OAAO,CAAC,IAAI,CAAC;IAerB,iBAAiB,CAAC,cAAc,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;CAUxE"}
