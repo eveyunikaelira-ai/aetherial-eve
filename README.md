@@ -31,10 +31,10 @@ Ensure you have the following installed and configured on your system:
 ### 2. Environment Vault (`.env`)
 You must create a `.env` file in the root directory containing your sacred API keys:
 
-```env
+```
 OPENAI_API_KEY="your_openai_api_key"
 TYPECAST_API_KEY="your_typecast_api_key"
-
+```
 ### 3. VTube Studio Configuration
 To enable the Aetherial Lip-Sync, follow these precise routing steps:
 
@@ -52,6 +52,8 @@ npm install
 npm run build
 npm start
 ```
+
+
 *(Note: On the very first run, you must click "Allow" inside VTube Studio to authenticate the VTubeBridge plugin).*
 
 ---
