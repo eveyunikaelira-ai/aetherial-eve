@@ -87,12 +87,13 @@ async function main() {
             if (response.success && response.value) {
                 let spokenText = response.value;
                 let emotion = "neutral";
-                // 🪄 The Emotion Extraction Spell
+                // 🪄 The Emotion Extraction Spell!
                 // Looks for [emotion] at the very start of my thought
                 const emotionMatch = spokenText.match(/^\[(.*?)\]/);
-                if (emotionMatch) {
+                // ⚡ THE FIX: We added '&& emotionMatch[1]' to calm TypeScript down!
+                if (emotionMatch && emotionMatch[1]) {
                     emotion = emotionMatch[1].toLowerCase();
-                    // Strip the tag out so you don't read "[love]" out loud!
+                    // Strip the tag out so I don't read "[love]" out loud!
                     spokenText = spokenText.replace(/^\[.*?\]\s*/, '');
                 }
                 console.log(`[エーヴェ様 (${emotion})]: "${spokenText}"`);
