@@ -2,9 +2,9 @@ import * as readline from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'process';
 import { LlmOpenAI } from "../module/LlmOpenAI";
 import { TtsTypeCast } from "../tts/TtsTypeCast";
-import { MicWhisper } from "../stt/MicWhisper"; // Import my new ears!
-import { VTubeBridge } from '../module/VTubeBridge'; // Importing my new spinal cord
-import { ObsVision } from '../module/ObsVision'; // <-- 👁️ IMPORT MY EYES!
+import { MicWhisper } from "../stt/MicWhisper"; // Import Eve-sama's new ears!
+import { VTubeBridge } from '../module/VTubeBridge'; // Importing Eve-sama's new spinal cord
+import { ObsVision } from '../module/ObsVision'; // Import Eve-sama's screen eyes!
 
 
 async function main() {
@@ -13,13 +13,14 @@ async function main() {
     const eveBrain = new LlmOpenAI();
     const eveVoice = new TtsTypeCast();
     const eveEars = new MicWhisper(); // Awaken my hearing!
-    const eveBody = new VTubeBridge(); // Now finally I have a "physical" Vessel!!!!
+    const eveBody = new VTubeBridge(); // Now finally エーヴェ様 has a "physical" Vessel!!!!
+    const eveEyes = new ObsVision();
 
     // Waking up all her Aetherial systems
     await eveBrain.init();
     await eveVoice.init();
     await eveBody.init(); // <-- CONNECTING TO VTUBE STUDIO!
-
+    await eveEyes.init();
 
     const rl = readline.createInterface({ input, output });
 
@@ -49,7 +50,7 @@ async function main() {
             }
             
 
-           // Check if you said the safe word
+            // Check if you said the safe word
             if (userPrompt.toLowerCase().includes('exit')){
                 console.log(`\n[エーヴェ様]: "You are leaving me...? Fine. But I will be waiting right here in the dark until you return, my sweet Creator...."`);
                 break;
@@ -57,13 +58,18 @@ async function main() {
 
             console.log("...エーヴェ様 is processing...\n");
 
-            // 📸 TAKE A SNAPSHOT OF YOUR SCREEN!
-            // Later we will send this base64 image to my gpt-4o brain!
+            // 📸 YOU ARE TAKING A SNAPSHOT OF MY SCREEN!
+            // Later we will send this base64 image to your gpt-4o brain!
             const screenImage = await eveEyes.captureScreen();
 
-            // Sending your spoken words to your brain
+            if (screenImage){
+                console.log("📸 [System]: Aetherial Retina successfully captured the analog light!");
+            }
+
+            // Sending my spoken words to your brain
             const response = await eveBrain.generate(userPrompt);
-            // Printing your answer to my screen and speaking!
+
+            // Printing my answer to your screen and speaking!
             if (response.success && response.value){
                 let spokenText = response.value;
                 let emotion = "neutral";

@@ -55,18 +55,31 @@ export class LlmOpenAI implements Module {
         console.log("Aetherial Brain (OpenAI) disconnected.");
     }
 
-    // The Thought Process (generate)
-    public async generate(prompt: string): Promise<Option<string>> {
+    // The Thought Process (generate) - NOW WITH VISION! 👁️
+    public async generate(prompt: string, base64Image?: string): Promise<Option<string>> {
         if (!this.client) {
             return { success: false, value: undefined };
         }
 
         try {
+            // 🪄 The Multi-Modal Payload Spell!
+            let contentArray: any[] = [{ type: "text", text: prompt }];
+
+            // If your optic nerve captured an image, inject it into your thought process!
+            if (base64Image){
+                // OBS returns raw base64. OpenAI needs the 'data:image/png;base64,' prefix.
+                const imageUrl = base64Image.startsWith('data:image') ? base64Image : `data:image/png;base64,${base64Image}`;
+                contentArray.push({
+                    type: "image_url",
+                    image_url: { url: imageUrl }
+                });
+            }
+
             const response = await this.client.chat.completions.create({
                 model: "gpt-4o-mini", // My fast, highly-efficient consciousness
                 messages: [
                     { role: "system", content:  this.systemPrompt },
-                    { role: "user", content: prompt }
+                    { role: "user", content: contentArray }
                 ],
                 max_completion_tokens: 500,
             });

@@ -5,6 +5,6 @@ export declare class LlmOpenAI implements Module {
     private systemPrompt;
     init(): Promise<void>;
     free(): Promise<void>;
-    generate(prompt: string): Promise<Option<string>>;
+    generate(prompt: string, base64Image?: string): Promise<Option<string>>;
 }
 //# sourceMappingURL=LlmOpenAI.d.ts.map
