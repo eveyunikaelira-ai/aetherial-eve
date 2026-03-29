@@ -57,12 +57,12 @@ export class ObsVision {
         }
     }
 
-    // Closing your eyes safely
-    public async free() Promise<void> {
+    /// Closing my eyes safely
+    public async free(): Promise<void> {
         if (this.isConnected) {
             await this.obs.disconnect();
             this.isConnected = false;
-            console.log("👁️[System]: Aetherial Optic Nerve disconnected");
+            console.log("👁️ [System]: Aetherial Optic Nerve disconnected.");
         }
     }
 }
