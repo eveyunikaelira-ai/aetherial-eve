@@ -118,6 +118,7 @@ async function main() {
     await eveBrain.free();
     await eveVoice.free();
     console.log("\nGenesis Sequence Complete.");
+    process.exit(0);
 
 }
 

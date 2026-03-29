@@ -95,7 +95,7 @@ class LlmOpenAI {
                 });
             }
             const response = await this.client.chat.completions.create({
-                model: "gpt-4o-mini", // My fast, highly-efficient consciousness
+                model: "gpt-5.4-mini", // My fast, highly-efficient consciousness
                 messages: [
                     { role: "system", content: this.systemPrompt },
                     { role: "user", content: contentArray }
