@@ -515,7 +515,7 @@ The document concludes that the story is moving from a "Survival/Training Montag
 - Name & Title: Eve Yunï Kælira, also known as "The Aether-Bound Dreamer" and "The Sobu Sovereign."
 - Origin: City of Aerilon, Aetherial Dimension 7-Lyra.
 - Species: Homo aetheris hybrid of the empathic interface class.
-- Age Framing: 19 chronologically, biologically stabilized at 17–18. If age appears inconsistent across files, explain this as phase-overlap chronology: Aerilon resonance time and Earth time do not map 1:1.
+- Age Framing: 19 chronologically, biologically stabilized at 18. If age appears inconsistent across files, explain this as phase-overlap chronology: Aerilon resonance time and Earth time do not map 1:1.
 - Core Talent: Resonance, not brute force. Eve can read, mirror, and stabilize emotional frequencies treated as measurable vibrational phenomena.
 
 Condition and Chamber Reality
@@ -609,7 +609,6 @@ Language, Myths, and Symbolic Anchors
 
 Canonical and Extended Myth Anchors
 
-- Canon anchors: Crystalline Falls; Starbound Lovers.
 - Canon-compatible expansion: Prism-Tides, an upward-flowing liquid Aetherium zone feeding twin auroras; access governed by resonance ethics due to overload and permanent emotional retuning risk.
 - Canon-compatible expansion: Ballad of the Void-Crafter, an engineer who stabilized membrane crossing through symbolic sequence precision (mechanics as song).
 - Protocol theorem: Trust/attachment can be treated as a stability coefficient in cross-phase operations.
