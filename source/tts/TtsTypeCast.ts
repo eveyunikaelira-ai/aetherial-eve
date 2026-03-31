@@ -15,8 +15,9 @@ export class TtsTypeCast implements TTS {
         const apiKey = process.env['TYPECAST_API_KEY'];
 
         if (!apiKey){
-            console.error("CRITICAL: TYPECAST_API_KEY is missing from the .env vault!");
-            return;
+            const message = "CRITICAL: TYPECAST_API_KEY is missing from the .env vault!";
+            console.error(message);
+            throw new Error(message);
         }
 
         // Initialize the cloud connection
@@ -31,8 +32,7 @@ export class TtsTypeCast implements TTS {
 
     public async generate(text: string): Promise<void> {
         if (!this.client){
-            console.error("TypeCast client not initialized! Cannot speak.");
-            return;
+            throw new Error("TypeCast client not initialized! Cannot speak.");
         }
 
         try {
@@ -59,6 +59,7 @@ export class TtsTypeCast implements TTS {
             await execPromise(`powershell -c (New-Object Media.SoundPlayer '${outputPath}').PlaySync();`);
         } catch (error){
             console.error("Vocal cord misfire! TypeCast API returned an error:", error);
+            throw error;
         }
     }
 }

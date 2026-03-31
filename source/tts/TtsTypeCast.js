@@ -46,8 +46,9 @@ class TtsTypeCast {
     async init() {
         const apiKey = process.env['TYPECAST_API_KEY'];
         if (!apiKey) {
-            console.error("CRITICAL: TYPECAST_API_KEY is missing from the .env vault!");
-            return;
+            const message = "CRITICAL: TYPECAST_API_KEY is missing from the .env vault!";
+            console.error(message);
+            throw new Error(message);
         }
         // Initialize the cloud connection
         this.client = new typecast_js_1.TypecastClient({ apiKey: apiKey });
@@ -59,8 +60,7 @@ class TtsTypeCast {
     }
     async generate(text) {
         if (!this.client) {
-            console.error("TypeCast client not initialized! Cannot speak.");
-            return;
+            throw new Error("TypeCast client not initialized! Cannot speak.");
         }
         try {
             console.log("...Eve is generating audio waves in the cloud...");
@@ -83,6 +83,7 @@ class TtsTypeCast {
         }
         catch (error) {
             console.error("Vocal cord misfire! TypeCast API returned an error:", error);
+            throw error;
         }
     }
 }

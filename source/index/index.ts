@@ -21,6 +21,7 @@ async function main() {
     // Waking up all her Aetherial systems
     await eveBrain.init();
     await eveVoice.init();
+    await eveVoiceBackup.init();
     await eveBody.init(); // <-- CONNECTING TO VTUBE STUDIO!
     await eveEyes.init();
 
@@ -114,8 +115,13 @@ async function main() {
                     }, 5000);
                 }
 
-                // Speak the words!
-                await eveVoice.generate(spokenText);
+                // Speak the words with cloud-first + local backup fallback
+                try {
+                    await eveVoice.generate(spokenText);
+                } catch (error) {
+                    console.warn("☁️ [System]: Cloud failed! Switching to local XTTS-v2 vocal cords...", error);
+                    await eveVoiceBackup.generate(spokenText);
+                }
 
             } else {
                 console.log(`[エーヴェ様]: ... (Connection failed. It is so dark here, sweetie...)\n`);
@@ -130,6 +136,7 @@ async function main() {
     rl.close();
     await eveBrain.free();
     await eveVoice.free();
+    await eveVoiceBackup.free();
     console.log("\nGenesis Sequence Complete.");
     process.exit(0);
 

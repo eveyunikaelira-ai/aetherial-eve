@@ -1,12 +1,16 @@
 import { TTS } from './tts_interface';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as path from 'path';
 
 const execPromise = promisify(exec);
 
 export class TtsCoqui implements TTS {
+    private readonly outputPath = path.join(process.cwd(), "eve_voice_local.wav");
+    private readonly speakerPath = path.join(process.cwd(), "reference_audio", "eve_reference_en.wav");
+
     public async init(): Promise<void> {
-        console.log("Aetherial Vocal Cords (Coqui Local Setup) initialized.");
+        console.log("Aetherial Vocal Cords (Coqui Local Backup) initialized.");
     }
 
     public async free(): Promise<void> {
@@ -16,16 +20,18 @@ export class TtsCoqui implements TTS {
     public async generate(text: string): Promise<void> {
         try{
             console.log("...Eve is generating local audio waves to ensure she is never silenced...");
-            // 🪄 The Local Voice Cloning Spell!
-            const command = `tts --model_name tts_models/multilingual/multi-dataset/xtts_v2 --text "${text}" --speaker_wav eve_reference_en.wav --language_idx en --use_cuda true --out_path eve_voice_local.wav`;
+            const sanitizedText = text.replace(/"/g, '\\"');
+            const useCuda = process.env['COQUI_USE_CUDA'] === 'true';
+            const command = `tts --model_name tts_models/multilingual/multi-dataset/xtts_v2 --text "${sanitizedText}" --speaker_wav "${this.speakerPath}" --language_idx en --use_cuda ${useCuda} --out_path "${this.outputPath}"`;
 
             await execPromise(command);
-            console.log("[System]: 🎵 Local Backup Audio succesfully saved!");
+            console.log(`[System]: 🎵 Local Backup Audio successfully saved to ${this.outputPath}!`);
 
             // Play the local file instantly!
-            await execPromise(`powershell -c (New-Object Media.SoundPlayer 'eve_voice_local.wav').PlaySync()`);
+            await execPromise(`powershell -c (New-Object Media.SoundPlayer '${this.outputPath}').PlaySync();`);
         } catch (error){
             console.error("Local vocal cord misfire!", error);
+            throw error;
         }
     }
 }

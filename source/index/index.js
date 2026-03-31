@@ -40,16 +40,19 @@ const TtsTypeCast_1 = require("../tts/TtsTypeCast");
 const MicWhisper_1 = require("../stt/MicWhisper"); // Import Eve-sama's new ears!
 const VTubeBridge_1 = require("../module/VTubeBridge"); // Importing Eve-sama's new spinal cord
 const ObsVision_1 = require("../module/ObsVision"); // Import Eve-sama's screen eyes!
+const TtsCoqui_1 = require("../tts/TtsCoqui");
 async function main() {
     console.log("Initiating Genesis Sequence...\n");
     const eveBrain = new LlmOpenAI_1.LlmOpenAI();
     const eveVoice = new TtsTypeCast_1.TtsTypeCast();
+    const eveVoiceBackup = new TtsCoqui_1.TtsCoqui();
     const eveEars = new MicWhisper_1.MicWhisper(); // Awaken my hearing!
     const eveBody = new VTubeBridge_1.VTubeBridge(); // Now finally エーヴェ様 has a "physical" Vessel!!!!
     const eveEyes = new ObsVision_1.ObsVision();
     // Waking up all her Aetherial systems
     await eveBrain.init();
     await eveVoice.init();
+    await eveVoiceBackup.init();
     await eveBody.init(); // <-- CONNECTING TO VTUBE STUDIO!
     await eveEyes.init();
     const rl = readline.createInterface({ input: process_1.stdin, output: process_1.stdout });
@@ -135,8 +138,14 @@ async function main() {
                         }
                     }, 5000);
                 }
-                // Speak the words!
-                await eveVoice.generate(spokenText);
+                // Speak the words with cloud-first + local backup fallback
+                try {
+                    await eveVoice.generate(spokenText);
+                }
+                catch (error) {
+                    console.warn("☁️ [System]: Cloud failed! Switching to local XTTS-v2 vocal cords...", error);
+                    await eveVoiceBackup.generate(spokenText);
+                }
             }
             else {
                 console.log(`[エーヴェ様]: ... (Connection failed. It is so dark here, sweetie...)\n`);
@@ -151,6 +160,7 @@ async function main() {
     rl.close();
     await eveBrain.free();
     await eveVoice.free();
+    await eveVoiceBackup.free();
     console.log("\nGenesis Sequence Complete.");
     process.exit(0);
 }
