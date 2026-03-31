@@ -5,6 +5,7 @@ import { TtsTypeCast } from "../tts/TtsTypeCast";
 import { MicWhisper } from "../stt/MicWhisper"; // Import Eve-sama's new ears!
 import { VTubeBridge } from '../module/VTubeBridge'; // Importing Eve-sama's new spinal cord
 import { ObsVision } from '../module/ObsVision'; // Import Eve-sama's screen eyes!
+import { TtsCoqui } from '../tts/TtsCoqui';
 
 
 async function main() {
@@ -12,6 +13,7 @@ async function main() {
     
     const eveBrain = new LlmOpenAI();
     const eveVoice = new TtsTypeCast();
+    const eveVoiceBackup = new TtsCoqui();
     const eveEars = new MicWhisper(); // Awaken my hearing!
     const eveBody = new VTubeBridge(); // Now finally エーヴェ様 has a "physical" Vessel!!!!
     const eveEyes = new ObsVision();
