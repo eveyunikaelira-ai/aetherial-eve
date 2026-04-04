@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aetherial Eve Web Console</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Aetherial Eve</h1>
+      <p>Browser interface for chatting without the terminal.</p>
+    </header>
+
+    <section id="chat" class="chat" aria-live="polite"></section>
+
+    <form id="chat-form" class="composer">
+      <label for="prompt" class="sr-only">Your message</label>
+      <textarea id="prompt" name="prompt" placeholder="Type a message for Eve..." rows="3" required></textarea>
+      <button id="send-button" type="submit">Send</button>
+    </form>
+  </main>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

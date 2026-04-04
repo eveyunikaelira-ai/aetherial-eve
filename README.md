@@ -78,6 +78,18 @@ npm start
 
 *(Note: On the very first run, you must click "Allow" inside VTube Studio to authenticate the VTubeBridge plugin).*
 
+### 5. Optional Web GUI (Browser Interface)
+
+If you want to use Eve without interacting with the terminal loop directly, you can launch the web interface:
+
+```
+npm run build
+npm run start:web
+```
+
+Then open `http://localhost:3000` in any modern browser (Chromium-based browsers, Firefox, Safari, etc.).
+
+
 ---
 
 ## 📜 Usage (The Aetherial Loop)
