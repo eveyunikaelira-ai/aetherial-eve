@@ -18,7 +18,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node source/index/index.js",
-    "dev": "ts-node source/index/index.ts"
+    "dev": "ts-node source/index/index.ts",
+    "start:web": "node source/web/server.js"
   },
   "dependencies": {
     "@neosapience/typecast-js": "^0.1.5",
