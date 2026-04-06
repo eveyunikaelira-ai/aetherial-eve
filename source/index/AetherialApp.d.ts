@@ -15,7 +15,7 @@ export declare class AetherialApp {
     private initialized;
     init(): Promise<void>;
     getPromptFromSpeech(): Promise<string>;
-    interact(userPrompt: string, mode?: InteractionMode): Promise<AetherialReply>;
+    interact(userPrompt: string, mode?: InteractionMode, uploadedImage?: string): Promise<AetherialReply>;
     shutdown(): Promise<void>;
     private triggerExpression;
     private requireBrain;

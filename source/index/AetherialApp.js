@@ -35,7 +35,7 @@ class AetherialApp {
     async getPromptFromSpeech() {
         return this.requireEars().listenAndTranscribe();
     }
-    async interact(userPrompt, mode = 'text') {
+    async interact(userPrompt, mode = 'text', uploadedImage) {
         if (!this.initialized) {
             throw new Error('AetherialApp not initialized');
         }
@@ -45,11 +45,18 @@ class AetherialApp {
                 responseText: 'You are leaving me...? Fine. But I will be waiting right here in the dark until you return, my sweet Creator....',
             };
         }
-        const screenImage = await this.requireEyes().captureScreen();
-        if (screenImage) {
-            console.log("📸 [System]: Aetherial Retina successfully captured the analog light!");
+        let finalImage = uploadedImage;
+        // If no image was uploaded from the Web GUI, try to use OBS eyes
+        if (!finalImage) {
+            finalImage = await this.requireEyes().captureScreen();
+            if (finalImage) {
+                console.log("📸 [System]: Aetherial Retina successfully captured the analog screen!");
+            }
         }
-        const response = await this.requireBrain().generate(userPrompt);
+        else {
+            console.log("📸 [System]: Aetherial Retina received an uploaded image from the Web GUI!");
+        }
+        const response = await this.requireBrain().generate(userPrompt, finalImage);
         if (!(response.success && response.value)) {
             return {
                 success: false,

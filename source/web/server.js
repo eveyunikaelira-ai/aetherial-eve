@@ -46,11 +46,12 @@ async function handleApi(req, res) {
             await ensureInitialized();
             const body = await parseBody(req);
             const prompt = typeof body['prompt'] === 'string' ? body['prompt'].trim() : '';
-            if (!prompt) {
-                respondJson(res, 400, { error: 'Prompt is required.' });
+            const image = typeof body['image'] === 'string' ? body['image'] : undefined;
+            if (!prompt && !image) {
+                respondJson(res, 400, { error: 'Prompt or image is required.' });
                 return true;
             }
-            const result = await app.interact(prompt, 'text');
+            const result = await app.interact(prompt, 'text', image);
             respondJson(res, 200, result);
             return true;
         }
