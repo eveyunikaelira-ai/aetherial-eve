@@ -17,13 +17,16 @@
     <section id="chat" class="chat" aria-live="polite"></section>
 
     <form id="chat-form" class="composer">
-      <label for="image-upload" class="upload-btn">
+      <label for="image-upload" class="upload-btn" title="Upload image">
         <i class="fa-solid fa-image"></i>
       </label>
+      <button id="mic-button" class="mic-btn" type="button" title="Start microphone input" aria-pressed="false">
+        <i class="fa-solid fa-microphone"></i>
+      </button>
       <input type="file" id="image-upload" accept="image/*" class="sr-only">
       
       <label for="prompt" class="sr-only">Your message</label>
-      <textarea id="prompt" name="prompt" placeholder="Type a message for Eve..." rows="3" required></textarea>
+      <textarea id="prompt" name="prompt" placeholder="Type a message for Eve... (Enter to send, Shift+Enter for newline)" rows="3" required></textarea>
       <button id="send-button" type="submit">Send</button>
     </form>
     <div id="image-preview-container" class="hidden">

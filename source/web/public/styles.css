@@ -144,12 +144,13 @@ header p {
 .composer {
   margin-top: 1rem;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto auto 1fr auto;
   gap: 0.6rem;
   align-items: stretch;
 }
 
 .upload-btn,
+.mic-btn,
 #send-button {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -167,6 +168,31 @@ header p {
   transition: transform 0.16s ease, background 0.16s ease;
 }
 
+
+.mic-btn {
+  width: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #1e1734;
+  color: var(--muted);
+  cursor: pointer;
+  transition: transform 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.mic-btn:hover:not(:disabled) {
+  background: #2a2148;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.mic-btn.recording {
+  background: linear-gradient(135deg, #ef4444, #be123c);
+  color: #fff;
+}
+
+.mic-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .upload-btn:hover {
   background: #2a2148;
   color: #fff;
@@ -190,6 +216,7 @@ header p {
 #prompt:focus-visible,
 #send-button:focus-visible,
 .upload-btn:focus-visible,
+.mic-btn:focus-visible,
 #remove-image:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

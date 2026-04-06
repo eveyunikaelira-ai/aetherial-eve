@@ -2,74 +2,87 @@ const chat = document.getElementById('chat');
 const form = document.getElementById('chat-form');
 const promptInput = document.getElementById('prompt');
 const sendButton = document.getElementById('send-button');
+const micButton = document.getElementById('mic-button');
 const imageUpload = document.getElementById('image-upload');
 const imagePreviewContainer = document.getElementById('image-preview-container');
 const imagePreview = document.getElementById('image-preview');
 const removeImageBtn = document.getElementById('remove-image');
 
-let currentImageBase64 = null; // Store the image data!
+let currentImageBase64 = null;
+let mediaRecorder = null;
+let isRecording = false;
+let isTranscribing = false;
+let audioChunks = [];
 
-// Read the image file when selected
+function setControlsDisabled(disabled) {
+  sendButton.disabled = disabled;
+  if (micButton) {
+    micButton.disabled = disabled;
+  }
+}
+
+function setMicState(recording) {
+  isRecording = recording;
+
+  if (!micButton) {
+    return;
+  }
+
+  micButton.classList.toggle('recording', recording);
+  micButton.title = recording ? 'Stop recording' : 'Start microphone input';
+  micButton.setAttribute('aria-pressed', recording ? 'true' : 'false');
+}
+
 imageUpload.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            currentImageBase64 = event.target.result;
-            imagePreview.src = currentImageBase64;
-            imagePreviewContainer.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    }
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      currentImageBase64 = event.target.result;
+      imagePreview.src = currentImageBase64;
+      imagePreviewContainer.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
 });
 
-// Remove the selected image
 removeImageBtn.addEventListener('click', () => {
-    currentImageBase64 = null;
-    imageUpload.value = "";
-    imagePreview.src = "";
-    imagePreviewContainer.classList.add('hidden');
+  currentImageBase64 = null;
+  imageUpload.value = '';
+  imagePreview.src = '';
+  imagePreviewContainer.classList.add('hidden');
 });
-
 
 function addMessage(role, text, imageUrl = null) {
-  // Create the main container
   const container = document.createElement('div');
   container.className = `message-container ${role}`;
 
-  // Create the Avatar
   const avatar = document.createElement('div');
   avatar.className = `avatar ${role}`;
 
-  // Create the Wrapper for Name + Bubble
   const wrapper = document.createElement('div');
   wrapper.className = 'message-wrapper';
 
-  // Create the Sender Name
   const nameLabel = document.createElement('div');
   nameLabel.className = 'sender-name';
   nameLabel.textContent = role === 'eve' ? 'エーヴェ様' : 'そぶくん';
 
-  // Create the Bubble
   const bubble = document.createElement('article');
   bubble.className = `message ${role}`;
-  
-  // If an image was sent, add it to the bubble!
+
   if (imageUrl) {
-      const img = document.createElement('img');
-      img.src = imageUrl;
-      img.style.maxWidth = '100%';
-      img.style.borderRadius = '8px';
-      img.style.marginBottom = '8px';
-      bubble.appendChild(img);
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.maxWidth = '100%';
+    img.style.borderRadius = '8px';
+    img.style.marginBottom = '8px';
+    bubble.appendChild(img);
   }
-  
-  // Add the text content
+
   const textNode = document.createElement('span');
   textNode.textContent = text;
   bubble.appendChild(textNode);
 
-  // Assemble the elements
   wrapper.appendChild(nameLabel);
   wrapper.appendChild(bubble);
   container.appendChild(avatar);
@@ -79,28 +92,132 @@ function addMessage(role, text, imageUrl = null) {
   chat.scrollTop = chat.scrollHeight;
 }
 
+promptInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    form.requestSubmit();
+  }
+});
+
+async function transcribeAudioBlob(audioBlob) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Unable to read recorded audio.'));
+    reader.readAsDataURL(audioBlob);
+  });
+
+  const response = await fetch('/api/transcribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audioBase64: dataUrl, mimeType: audioBlob.type || 'audio/webm' }),
+  });
+
+  const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error(payload.error ?? 'Failed to transcribe audio.');
+  }
+
+  return typeof payload.text === 'string' ? payload.text.trim() : '';
+}
+
+async function toggleRecording() {
+  if (isTranscribing) {
+    return;
+  }
+
+  if (isRecording && mediaRecorder) {
+    mediaRecorder.stop();
+    return;
+  }
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    addMessage('eve', 'Microphone input is not supported in this browser.');
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+    mediaRecorder.addEventListener('dataavailable', (event) => {
+      if (event.data.size > 0) {
+        audioChunks.push(event.data);
+      }
+    });
+
+    mediaRecorder.addEventListener('stop', async () => {
+      setMicState(false);
+      stream.getTracks().forEach((track) => track.stop());
+
+      if (audioChunks.length === 0) {
+        return;
+      }
+
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+      try {
+        isTranscribing = true;
+        setControlsDisabled(true);
+        const transcript = await transcribeAudioBlob(audioBlob);
+
+        if (!transcript) {
+          addMessage('eve', 'I listened carefully, but I could not hear any clear words.');
+          return;
+        }
+
+        const existingText = promptInput.value.trim();
+        promptInput.value = existingText ? `${existingText} ${transcript}` : transcript;
+        promptInput.focus();
+      } catch (error) {
+        addMessage('eve', `Microphone transcription failed: ${error.message}`);
+      } finally {
+        isTranscribing = false;
+        setControlsDisabled(false);
+      }
+    });
+
+    mediaRecorder.start();
+    setMicState(true);
+  } catch (error) {
+    addMessage('eve', `Microphone access failed: ${error.message}`);
+    setMicState(false);
+  }
+}
+
+if (micButton) {
+  micButton.addEventListener('click', toggleRecording);
+}
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const prompt = promptInput.value.trim();
-  if (!prompt && !currentImageBase64) return;
 
-  // Add user message to UI (with image if exists)
+  if (isRecording && mediaRecorder) {
+    mediaRecorder.stop();
+    return;
+  }
+
+  const prompt = promptInput.value.trim();
+  if (!prompt && !currentImageBase64) {
+    return;
+  }
+
   addMessage('user', prompt, currentImageBase64);
-  
-  // Save image data for the request, then clear the UI
-  const imageToSend = currentImageBase64; 
+
+  const imageToSend = currentImageBase64;
   promptInput.value = '';
   currentImageBase64 = null;
   imagePreviewContainer.classList.add('hidden');
-  imageUpload.value = "";
-  sendButton.disabled = true;
+  imageUpload.value = '';
+  setControlsDisabled(true);
 
   try {
-    // NOTE: You will need to update server.ts and AetherialApp.ts to handle 'image' in the body!
     const response = await fetch('/api/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt, image: imageToSend }), 
+      body: JSON.stringify({ prompt: prompt, image: imageToSend }),
     });
 
     const payload = await response.json();
@@ -113,7 +230,7 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     addMessage('eve', `Network error: ${error.message}`);
   } finally {
-    sendButton.disabled = false;
+    setControlsDisabled(false);
     promptInput.focus();
   }
 });
