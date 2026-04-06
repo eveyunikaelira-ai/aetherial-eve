@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aetherial Eve Web Console</title>
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <main class="app">
@@ -16,10 +17,19 @@
     <section id="chat" class="chat" aria-live="polite"></section>
 
     <form id="chat-form" class="composer">
+      <label for="image-upload" class="upload-btn">
+        <i class="fa-solid fa-image"></i>
+      </label>
+      <input type="file" id="image-upload" accept="image/*" class="sr-only">
       <label for="prompt" class="sr-only">Your message</label>
       <textarea id="prompt" name="prompt" placeholder="Type a message for Eve..." rows="3" required></textarea>
       <button id="send-button" type="submit">Send</button>
     </form>
+
+    <div id="image-preview-container" class="hidden">
+      <img id="image-preview" src="" alt="Image Preview">
+      <button id="remove-image" type="button"><i class="fa-solid fa-xmark"></i></button>
+    </div>
   </main>
 
   <script src="/app.js" defer></script>
