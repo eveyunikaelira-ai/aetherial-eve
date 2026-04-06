@@ -1,5 +1,3 @@
-const { parseNullableDef } = require("openai/_vendor/zod-to-json-schema/index.mjs");
-
 const chat = document.getElementById('chat');
 const form = document.getElementById('chat-form');
 const promptInput = document.getElementById('prompt');
@@ -13,25 +11,26 @@ let currentImageBase64 = null; // Store the image data!
 
 // Read the image file when selected
 imageUpload.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file){
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      currentImageBase64 = event.target.result;
-      imagePreview.src = currentImageBase64;
-      imagePreviewContainer.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-  }
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            currentImageBase64 = event.target.result;
+            imagePreview.src = currentImageBase64;
+            imagePreviewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
 });
 
 // Remove the selected image
 removeImageBtn.addEventListener('click', () => {
-  currentImageBase64 = null;
-  imageUpload.value = "";
-  imagePreview.src = "";
-  imagePreviewContainer.classList.add('hidden');
+    currentImageBase64 = null;
+    imageUpload.value = "";
+    imagePreview.src = "";
+    imagePreviewContainer.classList.add('hidden');
 });
+
 
 function addMessage(role, text, imageUrl = null) {
   // Create the main container
@@ -44,7 +43,7 @@ function addMessage(role, text, imageUrl = null) {
 
   // Create the Wrapper for Name + Bubble
   const wrapper = document.createElement('div');
-  wrapper.className = `message-wrapper`;
+  wrapper.className = 'message-wrapper';
 
   // Create the Sender Name
   const nameLabel = document.createElement('div');
@@ -54,17 +53,17 @@ function addMessage(role, text, imageUrl = null) {
   // Create the Bubble
   const bubble = document.createElement('article');
   bubble.className = `message ${role}`;
-
+  
   // If an image was sent, add it to the bubble!
   if (imageUrl) {
-    const img = document.createElement('img');
-    img.src = imageUrl;
-    img.style.maxWidth = '100%';
-    img.style.borderRadius = '8px';
-    img.style.marginBottom = '8px';
-    bubble.appendChild(img);
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '8px';
+      img.style.marginBottom = '8px';
+      bubble.appendChild(img);
   }
-
+  
   // Add the text content
   const textNode = document.createElement('span');
   textNode.textContent = text;
@@ -77,7 +76,6 @@ function addMessage(role, text, imageUrl = null) {
   container.appendChild(wrapper);
 
   chat.appendChild(container);
-
   chat.scrollTop = chat.scrollHeight;
 }
 
@@ -88,9 +86,9 @@ form.addEventListener('submit', async (event) => {
 
   // Add user message to UI (with image if exists)
   addMessage('user', prompt, currentImageBase64);
-
+  
   // Save image data for the request, then clear the UI
-  const imageToSend = currentImageBase64;
+  const imageToSend = currentImageBase64; 
   promptInput.value = '';
   currentImageBase64 = null;
   imagePreviewContainer.classList.add('hidden');
@@ -98,10 +96,11 @@ form.addEventListener('submit', async (event) => {
   sendButton.disabled = true;
 
   try {
+    // NOTE: You will need to update server.ts and AetherialApp.ts to handle 'image' in the body!
     const response = await fetch('/api/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt, image: imageToSend }),
+      body: JSON.stringify({ prompt: prompt, image: imageToSend }), 
     });
 
     const payload = await response.json();
