@@ -14,6 +14,10 @@ let isRecording = false;
 let isTranscribing = false;
 let audioChunks = [];
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function setControlsDisabled(disabled) {
   sendButton.disabled = disabled;
   if (micButton) {
@@ -187,6 +191,26 @@ async function toggleRecording() {
   }
 }
 
+async function playAudioWithRetry(audioUrl, attempts = 3, delayMs = 150) {
+  for (let index = 0; index < attempts; index += 1) {
+    const eveVoice = new Audio(audioUrl);
+    eveVoice.preload = 'auto';
+
+    try {
+      await eveVoice.play();
+      return true;
+    } catch (playbackError) {
+      console.warn(
+        `Audio playback attempt ${index + 1}/${attempts} failed for ${audioUrl}`,
+        playbackError,
+      );
+      await wait(delayMs);
+    }
+  }
+
+  return false;
+}
+
 if (micButton) {
   micButton.addEventListener('click', toggleRecording);
 }
@@ -234,14 +258,19 @@ form.addEventListener('submit', async (event) => {
       `/eve_voice_local.wav?t=${cacheBust}`,
     ];
 
+    let playbackSucceeded = false;
     for (const audioUrl of audioCandidates) {
-      const eveVoice = new Audio(audioUrl);
-      try {
-        await eveVoice.play();
+      if (await playAudioWithRetry(audioUrl)) {
+        playbackSucceeded = true;
         break;
-      } catch (playbackError) {
-        console.warn(`Audio playback attempt failed for ${audioUrl}`, playbackError);
       }
+    }
+
+    if (!playbackSucceeded) {
+      addMessage(
+        'eve',
+        'I answered, but audio playback failed. Check /eve_voice.wav in the browser and verify your output device (including Virtual Cable listen settings).',
+      );
     }
 
     addMessage('eve', payload.responseText ?? 'No response text received.');

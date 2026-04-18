@@ -151,8 +151,9 @@ async function handleApi(req: IncomingMessage, res: ServerResponse): Promise<boo
 }
 
 async function serveStatic(req: IncomingMessage, res: ServerResponse): Promise<void> {
-    const requested = req.url === '/' ? '/index.html' : req.url ?? '/index.html';
-    const safePath = normalize(requested).replace(/^\.\.(\/|\\|$)/, '');
+    const requestPath = new URL(req.url ?? '/index.html', 'http://localhost').pathname;
+    const requested = requestPath === '/' ? '/index.html' : requestPath;
+    const safePath = normalize(requested).replace(/^(\.\.(\/|\\|$))+/, '');
     const filePath = join(PUBLIC_DIR, safePath);
 
     try {
