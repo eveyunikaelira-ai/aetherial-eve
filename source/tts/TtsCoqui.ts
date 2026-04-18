@@ -6,7 +6,7 @@ import * as path from 'path';
 const execPromise = promisify(exec);
 
 export class TtsCoqui implements TTS {
-    private readonly outputPath = path.join(process.cwd(), "eve_voice_local.wav");
+    private readonly outputPath = path.join(process.cwd(), "source", "web", "public", "eve_voice_local.wav");
     private readonly speakerPath = path.join(process.cwd(), "reference_audio", "eve_reference_en.wav");
 
     public async init(): Promise<void> {
@@ -27,8 +27,7 @@ export class TtsCoqui implements TTS {
             await execPromise(command);
             console.log(`[System]: 🎵 Local Backup Audio successfully saved to ${this.outputPath}!`);
 
-            // Play the local file instantly!
-            await execPromise(`powershell -c (New-Object Media.SoundPlayer '${this.outputPath}').PlaySync();`);
+            console.log("...Local backup audio generated and ready for browser playback...");
         } catch (error){
             console.error("Local vocal cord misfire!", error);
             throw error;
