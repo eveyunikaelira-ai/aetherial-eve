@@ -19,6 +19,10 @@ const contentTypes: Record<string, string> = {
     '.css': 'text/css; charset=utf-8',
     '.js': 'application/javascript; charset=utf-8',
     '.json': 'application/json; charset=utf-8',
+    '.wav': 'audio/wav',
+    '.mp3': 'audio/mpeg',
+    '.ogg': 'audio/ogg',
+    '.webm': 'audio/webm',
 };
 
 async function ensureInitialized(): Promise<void> {
@@ -151,13 +155,14 @@ async function handleApi(req: IncomingMessage, res: ServerResponse): Promise<boo
 }
 
 async function serveStatic(req: IncomingMessage, res: ServerResponse): Promise<void> {
-    const requested = req.url === '/' ? '/index.html' : req.url ?? '/index.html';
-    const safePath = normalize(requested).replace(/^\.\.(\/|\\|$)/, '');
+    const requestPath = new URL(req.url ?? '/index.html', 'http://localhost').pathname;
+    const requested = requestPath === '/' ? '/index.html' : requestPath;
+    const safePath = normalize(requested).replace(/^(\.\.(\/|\\|$))+/, '');
     const filePath = join(PUBLIC_DIR, safePath);
 
     try {
         const data = await readFile(filePath);
-        const contentType = contentTypes[extname(filePath)] ?? 'text/plain; charset=utf-8';
+        const contentType = contentTypes[extname(filePath).toLowerCase()] ?? 'application/octet-stream';
         res.writeHead(200, { 'Content-Type': contentType });
         res.end(data);
     } catch {
