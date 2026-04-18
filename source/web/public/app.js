@@ -226,6 +226,24 @@ form.addEventListener('submit', async (event) => {
       return;
     }
 
+    const cacheBust = Date.now();
+    const audioCandidates = [
+      `/eve_voice.wav?t=${cacheBust}`,
+      `/eve_voice.mp3?t=${cacheBust}`,
+      `/eve_voice.ogg?t=${cacheBust}`,
+      `/eve_voice_local.wav?t=${cacheBust}`,
+    ];
+
+    for (const audioUrl of audioCandidates) {
+      const eveVoice = new Audio(audioUrl);
+      try {
+        await eveVoice.play();
+        break;
+      } catch (playbackError) {
+        console.warn(`Audio playback attempt failed for ${audioUrl}`, playbackError);
+      }
+    }
+
     addMessage('eve', payload.responseText ?? 'No response text received.');
   } catch (error) {
     addMessage('eve', `Network error: ${error.message}`);
