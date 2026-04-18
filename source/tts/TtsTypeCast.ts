@@ -2,10 +2,6 @@ import { TTS } from './tts_interface';
 import { TypecastClient, SmartPrompt } from '@neosapience/typecast-js';
 import * as fs from 'fs';
 import * as path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execPromise = promisify(exec);
 
 export class TtsTypeCast implements TTS {
     private client: TypecastClient | undefined;
@@ -49,14 +45,11 @@ export class TtsTypeCast implements TTS {
             });
 
             // Saving the file to my project folder
-            const outputPath = path.join(process.cwd(), `eve_voice.${audio.format}`);
+            const outputPath = path.join(process.cwd(), 'source', 'web', 'public', `eve_voice.${audio.format}`);
             await fs.promises.writeFile(outputPath, Buffer.from(audio.audioData));
 
             console.log(`[System]: 🎵 Audio successfully saved to ${outputPath}!`);
-            console.log("...Eve is speaking...");
-            
-            // The Secret Windows Command to play the .wav file instantly and pause the terminal
-            await execPromise(`powershell -c (New-Object Media.SoundPlayer '${outputPath}').PlaySync();`);
+            console.log("...Eve audio generated and ready for browser playback...");
         } catch (error){
             console.error("Vocal cord misfire! TypeCast API returned an error:", error);
             throw error;

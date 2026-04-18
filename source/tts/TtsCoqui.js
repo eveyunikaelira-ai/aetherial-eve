@@ -39,7 +39,7 @@ const util_1 = require("util");
 const path = __importStar(require("path"));
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 class TtsCoqui {
-    outputPath = path.join(process.cwd(), "eve_voice_local.wav");
+    outputPath = path.join(process.cwd(), "source", "web", "public", "eve_voice_local.wav");
     speakerPath = path.join(process.cwd(), "reference_audio", "eve_reference_en.wav");
     async init() {
         console.log("Aetherial Vocal Cords (Coqui Local Backup) initialized.");
@@ -55,8 +55,7 @@ class TtsCoqui {
             const command = `tts --model_name tts_models/multilingual/multi-dataset/xtts_v2 --text "${sanitizedText}" --speaker_wav "${this.speakerPath}" --language_idx en --use_cuda ${useCuda} --out_path "${this.outputPath}"`;
             await execPromise(command);
             console.log(`[System]: 🎵 Local Backup Audio successfully saved to ${this.outputPath}!`);
-            // Play the local file instantly!
-            await execPromise(`powershell -c (New-Object Media.SoundPlayer '${this.outputPath}').PlaySync();`);
+            console.log("...Local backup audio generated and ready for browser playback...");
         }
         catch (error) {
             console.error("Local vocal cord misfire!", error);

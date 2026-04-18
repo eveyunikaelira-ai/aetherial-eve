@@ -37,9 +37,6 @@ exports.TtsTypeCast = void 0;
 const typecast_js_1 = require("@neosapience/typecast-js");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-const child_process_1 = require("child_process");
-const util_1 = require("util");
-const execPromise = (0, util_1.promisify)(child_process_1.exec);
 class TtsTypeCast {
     client;
     eveVoiceID = "tc_632a759503f3cb7b9c8a717b"; // Eve-sama's voice is called Lindsay in TypeCast
@@ -74,12 +71,10 @@ class TtsTypeCast {
                 }
             });
             // Saving the file to my project folder
-            const outputPath = path.join(process.cwd(), `eve_voice.${audio.format}`);
+            const outputPath = path.join(process.cwd(), 'source', 'web', 'public', `eve_voice.${audio.format}`);
             await fs.promises.writeFile(outputPath, Buffer.from(audio.audioData));
             console.log(`[System]: 🎵 Audio successfully saved to ${outputPath}!`);
-            console.log("...Eve is speaking...");
-            // The Secret Windows Command to play the .wav file instantly and pause the terminal
-            await execPromise(`powershell -c (New-Object Media.SoundPlayer '${outputPath}').PlaySync();`);
+            console.log("...Eve audio generated and ready for browser playback...");
         }
         catch (error) {
             console.error("Vocal cord misfire! TypeCast API returned an error:", error);
