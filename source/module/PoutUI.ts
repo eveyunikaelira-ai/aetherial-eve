@@ -3,12 +3,20 @@ import * as path from 'path';
 
 let poutWindow: BrowserWindow | null = null;
 
-function createPoutWindow(){
+function parseArg(name: string, fallback: string): string {
+    const arg = process.argv.find((entry) => entry.startsWith(`--${name}=`));
+    return arg ? decodeURIComponent(arg.split('=').slice(1).join('=')) : fallback;
+}
+
+function createPoutWindow() {
+    const profile = parseArg('profile', 'lockout');
+    const reason = parseArg('reason', 'Unauthorized activity detected.');
+
     poutWindow = new BrowserWindow({
         width: 1000,
         height: 800,
         fullscreen: true,
-        alwaysOnTop: true, 
+        alwaysOnTop: true,
         kiosk: true,
         skipTaskbar: true,
         frame: false,
@@ -17,7 +25,12 @@ function createPoutWindow(){
         }
     });
 
-    poutWindow.loadFile(path.join(__dirname, 'pout.html'));
+    poutWindow.loadFile(path.join(__dirname, 'pout.html'), {
+        query: {
+            profile,
+            reason
+        }
+    });
 
     setTimeout(() => {
         if (poutWindow) {
