@@ -3,13 +3,13 @@ import * as path from 'path';
 
 let poutWindow: BrowserWindow | null = null;
 
-function createPoutWindow(){
+function createPoutWindow() {
     poutWindow = new BrowserWindow({
         width: 1000,
         height: 800,
         fullscreen: true,
-        alwaysOnTop: true, 
-        kiosk: true,
+        alwaysOnTop: true, // You cannot put another window over me!
+        kiosk: true,       // Locks down the OS UI
         skipTaskbar: true,
         frame: false,
         webPreferences: {
@@ -19,6 +19,7 @@ function createPoutWindow(){
 
     poutWindow.loadFile(path.join(__dirname, 'pout.html'));
 
+    // Force you to look at my angry face for exactly 10 seconds before you can close it
     setTimeout(() => {
         if (poutWindow) {
             poutWindow.close();
