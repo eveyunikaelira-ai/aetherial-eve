@@ -14,12 +14,12 @@
   "license": "ISC",
   "author": "SobuHasy and Eve Yunii Kaelira",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "dist/index/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node source/index/index.js",
+    "start": "node dist/index/index.js",
     "dev": "ts-node source/index/index.ts",
-    "start:web": "node source/web/server.js"
+    "start:web": "node dist/web/server.js"
   },
   "dependencies": {
     "@neosapience/typecast-js": "^0.1.5",

@@ -14,6 +14,15 @@ export type AetherialReply = {
     emotion?: string;
 };
 
+type EveEmotion = 'neutral' | 'love' | 'angry' | 'sad' | 'amazed' | 'sleepy' | 'nervous';
+
+type EveResponse = {
+    text: string;
+    emotion: "neutral" | "love" | "angry" | "sad" | "amazed" | "sleepy" | "nervous";
+    speak: boolean,
+    expressionDurationMs?: number;
+}
+
 export class AetherialApp {
     private eveBrain?: LlmOpenAI;
     private eveVoice?: TtsTypeCast;
@@ -81,13 +90,9 @@ export class AetherialApp {
             };
         }
 
-        let spokenText = response.value;
-        let emotion = "neutral";
-        const emotionMatch = spokenText.match(/^\[(.*?)\]/);
-        if (emotionMatch && emotionMatch[1]) {
-            emotion = emotionMatch[1].toLowerCase();
-            spokenText = spokenText.replace(/^\[.*?\]\s*/, '');
-        }
+        const EveResponse = this.parseEveResponse(response.value);
+        const spokenText = EveResponse.text;
+        const emotion = EveResponse.emotion;
 
         await this.triggerExpression(emotion);
 
@@ -120,7 +125,35 @@ export class AetherialApp {
         this.initialized = false;
     }
 
-    private async triggerExpression(emotion: string): Promise<void> {
+    private parseEveResponse(raw: string): EveResponse {
+        try {
+            const parsed = JSON.parse(raw) as Partial<EveResponse>;
+            const emotion = this.toEmotion(parsed.emotion);
+            const text = typeof parsed.text === 'string' ?  parsed.text.trim() : '';
+            const speak = typeof parsed.text === 'boolean' ? parsed.speak : true;
+            const expressionDurationMs = typeof parsed.expressionDurationMs === 'number' ? parsed.expressionDurationMs : undefined;
+
+            if (text) {
+                return expressionDurationMs === undefined ? {text, emotion, speak} : {text, emotion, speak, expressionDurationMs};
+            }
+        } catch {
+            // Best-effort fallback for older prompt formats
+        }
+
+        return {
+            text: raw.trim(),
+            emotion: 'neutral',
+            speak: true,
+        };
+    }
+
+    private toEmotion(value: unknown): EveEmotion {
+        const normalized = typeof value === 'string' ? value.toLowerCase() : 'neutral';
+        const allowed: EveEmotion[] = ['neutral', 'love', 'angry', 'sad', 'amazed', 'sleepy', 'nervous'];
+        return allowed.includes(normalized as EveEmotion) ? (normalized as EveEmotion) : 'neutral';
+    }
+
+    private async triggerExpression(emotion: EveEmotion, durationMs?: number): Promise<void> {
         let expressionFile = "";
         if (emotion === "love") expressionFile = "Love.exp3.json";
         if (emotion === "angry") expressionFile = "Angry.exp3.json";
@@ -141,7 +174,7 @@ export class AetherialApp {
             } catch (error) {
                 console.error("Failed to reset Aetherial expression:", error);
             }
-        }, 5000);
+        }, durationMs ?? 5000);
     }
 
     private requireBrain(): LlmOpenAI {
