@@ -94,14 +94,17 @@ export class AetherialApp {
         const spokenText = EveResponse.text;
         const emotion = EveResponse.emotion;
 
-        await this.triggerExpression(emotion);
+        await this.triggerExpression(emotion, EveResponse.expressionDurationMs);
 
-        try {
-            await this.requireVoice().generate(spokenText);
-        } catch (error) {
-            console.warn("☁️ [System]: Cloud failed! Switching to local XTTS-v2 vocal cords...", error);
-            await this.requireBackupVoice().generate(spokenText);
+        if (EveResponse.speak){
+            try {
+                await this.requireVoice().generate(spokenText);
+            } catch (error) {
+                console.warn("☁️ [System]: Cloud failed! Switching to local XTTS-v2 vocal cords...", error);
+                await this.requireBackupVoice().generate(spokenText);
+            }
         }
+        
 
         const speakerLabel = mode === 'speech' ? 'speech' : 'text';
         console.log(`[エーヴェ様:${speakerLabel} (${emotion})]: "${spokenText}"`);
@@ -130,7 +133,7 @@ export class AetherialApp {
             const parsed = JSON.parse(raw) as Partial<EveResponse>;
             const emotion = this.toEmotion(parsed.emotion);
             const text = typeof parsed.text === 'string' ?  parsed.text.trim() : '';
-            const speak = typeof parsed.text === 'boolean' ? parsed.speak : true;
+            const speak = typeof parsed.speak === 'boolean' ? parsed.speak : true;
             const expressionDurationMs = typeof parsed.expressionDurationMs === 'number' ? parsed.expressionDurationMs : undefined;
 
             if (text) {

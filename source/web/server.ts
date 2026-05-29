@@ -5,11 +5,12 @@ import { extname, join, normalize } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { OpenAI } from 'openai';
 import { AetherialApp } from '../index/AetherialApp';
+import { SystemHealthService } from '../module/SystemHealthService';
 
 const PORT = Number(process.env['PORT'] ?? 3000);
 const PUBLIC_DIR = join(process.cwd(), 'source', 'web', 'public');
 const TMP_DIR = join(process.cwd(), 'tmp');
-
+const healthService = new SystemHealthService();
 const app = new AetherialApp();
 const transcribeClient = new OpenAI({ apiKey: process.env['OPENAI_API_KEY'] });
 let isReady = false;
@@ -98,7 +99,8 @@ async function transcribeAudio(audioBase64: string, mimeType: string): Promise<s
 
 async function handleApi(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
     if (req.url === '/api/status' && req.method === 'GET') {
-        respondJson(res, 200, { online: true, ready: isReady });
+        const health = await healthService.check(isReady);
+        respondJson(res, 200, { online: true, ready: isReady, health, });
         return true;
     }
 
