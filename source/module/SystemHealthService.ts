@@ -70,6 +70,11 @@ export class SystemHealthService {
                 resolve("offline");
             });
 
+            socket.once("error", () => {
+                socket.destroy();
+                resolve("offline");
+            });
+
             socket.connect(port, host);
         });
     }

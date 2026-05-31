@@ -117,6 +117,14 @@ export class AetherialApp {
         };
     }
 
+    async captureVision(): Promise<string | undefined> {
+        if (!this.initialized) {
+            throw new Error('AetherialApp not initialized');
+        }
+
+        return this.requireEyes().captureScreen();
+    }
+
     async shutdown(): Promise<void> {
         if (!this.initialized) {
             return;

@@ -1,4 +1,4 @@
-const chat = document.getElementById('chat');
+const chat = document.getElementById('chat-log');
 const form = document.getElementById('chat-form');
 const promptInput = document.getElementById('prompt');
 const sendButton = document.getElementById('send-button');
@@ -7,12 +7,33 @@ const imageUpload = document.getElementById('image-upload');
 const imagePreviewContainer = document.getElementById('image-preview-container');
 const imagePreview = document.getElementById('image-preview');
 const removeImageBtn = document.getElementById('remove-image');
+const runtimePill = document.getElementById('runtime-pill');
+const autoPlayToggle = document.getElementById('auto-play-toggle');
+const sttReadyToggle = document.getElementById('stt-ready-toggle');
+const voiceTestButton = document.getElementById('voice-test');
+const captureVisionButton = document.getElementById('capture-vision');
+const visionPreview = document.getElementById('vision-preview');
+const visionStatus = document.getElementById('vision-status');
+const memoryForm = document.getElementById('memory-form');
+const memoryCategory = document.getElementById('memory-category');
+const memoryContent = document.getElementById('memory-content');
+const memoryList = document.getElementById('memory-list');
+const refreshMemory = document.getElementById('refresh-memory');
+const taskForm = document.getElementById('task-form');
+const taskKind = document.getElementById('task-kind');
+const taskTitle = document.getElementById('task-title');
+const taskDetails = document.getElementById('task-details');
+const taskList = document.getElementById('task-list');
+const healthGrid = document.getElementById('health-grid');
+const logList = document.getElementById('log-list');
+const refreshSystem = document.getElementById('refresh-system');
 
 let currentImageBase64 = null;
 let mediaRecorder = null;
 let isRecording = false;
 let isTranscribing = false;
 let audioChunks = [];
+let editingMemoryId = null;
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,7 +42,7 @@ function wait(ms) {
 function setControlsDisabled(disabled) {
   sendButton.disabled = disabled;
   if (micButton) {
-    micButton.disabled = disabled;
+    micButton.disabled = disabled || !sttReadyToggle.checked;
   }
 }
 
@@ -37,25 +58,15 @@ function setMicState(recording) {
   micButton.setAttribute('aria-pressed', recording ? 'true' : 'false');
 }
 
-imageUpload.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      currentImageBase64 = event.target.result;
-      imagePreview.src = currentImageBase64;
-      imagePreviewContainer.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
+function statusClass(status) {
+  if (status === 'online') {
+    return 'good';
   }
-});
-
-removeImageBtn.addEventListener('click', () => {
-  currentImageBase64 = null;
-  imageUpload.value = '';
-  imagePreview.src = '';
-  imagePreviewContainer.classList.add('hidden');
-});
+  if (status === 'degraded' || status === 'unknown') {
+    return 'warn';
+  }
+  return 'bad';
+}
 
 function addMessage(role, text, imageUrl = null) {
   const container = document.createElement('div');
@@ -77,9 +88,8 @@ function addMessage(role, text, imageUrl = null) {
   if (imageUrl) {
     const img = document.createElement('img');
     img.src = imageUrl;
-    img.style.maxWidth = '100%';
-    img.style.borderRadius = '8px';
-    img.style.marginBottom = '8px';
+    img.alt = 'Uploaded context';
+    img.className = 'message-image';
     bubble.appendChild(img);
   }
 
@@ -96,12 +106,14 @@ function addMessage(role, text, imageUrl = null) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-promptInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    form.requestSubmit();
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error ?? `Request failed: ${response.status}`);
   }
-});
+  return payload;
+}
 
 async function transcribeAudioBlob(audioBlob) {
   const dataUrl = await new Promise((resolve, reject) => {
@@ -111,23 +123,17 @@ async function transcribeAudioBlob(audioBlob) {
     reader.readAsDataURL(audioBlob);
   });
 
-  const response = await fetch('/api/transcribe', {
+  const payload = await fetchJson('/api/transcribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ audioBase64: dataUrl, mimeType: audioBlob.type || 'audio/webm' }),
   });
 
-  const payload = await response.json();
-
-  if (!response.ok) {
-    throw new Error(payload.error ?? 'Failed to transcribe audio.');
-  }
-
   return typeof payload.text === 'string' ? payload.text.trim() : '';
 }
 
 async function toggleRecording() {
-  if (isTranscribing) {
+  if (isTranscribing || !sttReadyToggle.checked) {
     return;
   }
 
@@ -200,10 +206,7 @@ async function playAudioWithRetry(audioUrl, attempts = 3, delayMs = 150) {
       await eveVoice.play();
       return true;
     } catch (playbackError) {
-      console.warn(
-        `Audio playback attempt ${index + 1}/${attempts} failed for ${audioUrl}`,
-        playbackError,
-      );
+      console.warn(`Audio playback attempt ${index + 1}/${attempts} failed for ${audioUrl}`, playbackError);
       await wait(delayMs);
     }
   }
@@ -211,9 +214,222 @@ async function playAudioWithRetry(audioUrl, attempts = 3, delayMs = 150) {
   return false;
 }
 
+async function playLatestVoice() {
+  const cacheBust = Date.now();
+  const audioCandidates = [
+    `/eve_voice.wav?t=${cacheBust}`,
+    `/eve_voice.mp3?t=${cacheBust}`,
+    `/eve_voice.ogg?t=${cacheBust}`,
+    `/eve_voice_local.wav?t=${cacheBust}`,
+  ];
+
+  for (const audioUrl of audioCandidates) {
+    if (await playAudioWithRetry(audioUrl)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function loadSystemStatus() {
+  const payload = await fetchJson('/api/status');
+  const readyText = payload.ready ? 'Runtime ready' : 'Runtime warms on first chat';
+  runtimePill.textContent = readyText;
+  runtimePill.className = `status-pill ${payload.ready ? 'good' : 'warn'}`;
+
+  healthGrid.replaceChildren();
+  Object.entries(payload.health ?? {}).forEach(([key, value]) => {
+    if (key === 'checkedAt') {
+      return;
+    }
+    const item = document.createElement('div');
+    item.className = `health-item ${statusClass(value)}`;
+    item.innerHTML = `<strong>${key}</strong><span>${value}</span>`;
+    healthGrid.appendChild(item);
+  });
+
+  logList.replaceChildren();
+  (payload.logs ?? []).slice(0, 12).forEach((entry) => {
+    const row = document.createElement('div');
+    row.className = `log-row ${entry.level}`;
+    row.textContent = `${new Date(entry.createdAt).toLocaleTimeString()} · ${entry.level.toUpperCase()} · ${entry.message}`;
+    logList.appendChild(row);
+  });
+}
+
+async function loadVision() {
+  const payload = await fetchJson('/api/vision');
+  renderVision(payload);
+}
+
+function renderVision(payload) {
+  visionPreview.replaceChildren();
+  if (payload.image) {
+    const img = document.createElement('img');
+    img.src = payload.image;
+    img.alt = 'Latest OBS screen context';
+    visionPreview.appendChild(img);
+  } else {
+    visionPreview.textContent = 'No screen context captured yet.';
+  }
+  const captured = payload.capturedAt ? ` Captured ${new Date(payload.capturedAt).toLocaleString()}.` : '';
+  visionStatus.textContent = `${payload.status ?? 'Waiting for capture.'}${captured}`;
+}
+
+async function loadMemory() {
+  const payload = await fetchJson('/api/memory');
+  if (memoryCategory.children.length === 0) {
+    payload.categories.forEach((category) => {
+      const option = document.createElement('option');
+      option.value = category;
+      option.textContent = category.replaceAll('_', ' ');
+      memoryCategory.appendChild(option);
+    });
+  }
+
+  memoryList.replaceChildren();
+  if (payload.memories.length === 0) {
+    memoryList.textContent = 'No long-term memories stored yet.';
+    return;
+  }
+
+  payload.memories.slice(0, 30).forEach((memory) => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'list-row memory-row';
+    row.innerHTML = `<strong>${memory.category.replaceAll('_', ' ')}</strong><span>${memory.content}</span><small>${memory.source} · ${Math.round(memory.confidence * 100)}%</small>`;
+    row.addEventListener('click', () => {
+      editingMemoryId = memory.id;
+      memoryCategory.value = memory.category;
+      memoryContent.value = memory.content;
+      memoryContent.focus();
+    });
+    memoryList.appendChild(row);
+  });
+}
+
+async function loadTasks() {
+  const payload = await fetchJson('/api/tasks');
+  taskList.replaceChildren();
+  payload.tasks.forEach((task) => {
+    const row = document.createElement('label');
+    row.className = `list-row task-row ${task.done ? 'done' : ''}`;
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = task.done;
+    checkbox.addEventListener('change', async () => {
+      await fetchJson('/api/tasks', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: task.id, done: checkbox.checked }),
+      });
+      await loadTasks();
+      await loadSystemStatus();
+    });
+    const text = document.createElement('span');
+    text.innerHTML = `<strong>${task.title}</strong><small>${task.kind} · ${task.details || 'No details'}</small>`;
+    row.appendChild(checkbox);
+    row.appendChild(text);
+    taskList.appendChild(row);
+  });
+}
+
+imageUpload.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      currentImageBase64 = event.target.result;
+      imagePreview.src = currentImageBase64;
+      imagePreviewContainer.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+removeImageBtn.addEventListener('click', () => {
+  currentImageBase64 = null;
+  imageUpload.value = '';
+  imagePreview.src = '';
+  imagePreviewContainer.classList.add('hidden');
+});
+
+promptInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    form.requestSubmit();
+  }
+});
+
 if (micButton) {
   micButton.addEventListener('click', toggleRecording);
 }
+
+sttReadyToggle.addEventListener('change', () => setControlsDisabled(false));
+voiceTestButton.addEventListener('click', async () => {
+  if (!(await playLatestVoice())) {
+    addMessage('eve', 'Voice playback test failed. Generate a response first, then verify audio output routing.');
+  }
+});
+
+captureVisionButton.addEventListener('click', async () => {
+  captureVisionButton.disabled = true;
+  visionStatus.textContent = 'Capturing OBS context…';
+  try {
+    renderVision(await fetchJson('/api/vision/capture', { method: 'POST' }));
+  } catch (error) {
+    visionStatus.textContent = error.message;
+  } finally {
+    captureVisionButton.disabled = false;
+    await loadSystemStatus();
+  }
+});
+
+memoryForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const body = {
+    id: editingMemoryId,
+    category: memoryCategory.value,
+    content: memoryContent.value,
+    confidence: 0.85,
+    source: 'manual',
+  };
+  await fetchJson('/api/memory', {
+    method: editingMemoryId ? 'PATCH' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  editingMemoryId = null;
+  memoryContent.value = '';
+  await loadMemory();
+  await loadSystemStatus();
+});
+
+refreshMemory.addEventListener('click', loadMemory);
+
+taskForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  await fetchJson('/api/tasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind: taskKind.value, title: taskTitle.value, details: taskDetails.value }),
+  });
+  taskTitle.value = '';
+  taskDetails.value = '';
+  await loadTasks();
+  await loadSystemStatus();
+});
+
+refreshSystem.addEventListener('click', loadSystemStatus);
+
+document.querySelectorAll('.mode-btn').forEach((button) => {
+  button.addEventListener('click', () => {
+    promptInput.value = button.dataset.prompt;
+    promptInput.focus();
+    document.getElementById('chat').scrollIntoView({ behavior: 'smooth' });
+  });
+});
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -238,42 +454,18 @@ form.addEventListener('submit', async (event) => {
   setControlsDisabled(true);
 
   try {
-    const response = await fetch('/api/message', {
+    const payload = await fetchJson('/api/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: prompt, image: imageToSend }),
     });
 
-    const payload = await response.json();
-    if (!response.ok) {
-      addMessage('eve', `Error: ${payload.error ?? 'Unknown error'}`);
-      return;
-    }
-
-    const cacheBust = Date.now();
-    const audioCandidates = [
-      `/eve_voice.wav?t=${cacheBust}`,
-      `/eve_voice.mp3?t=${cacheBust}`,
-      `/eve_voice.ogg?t=${cacheBust}`,
-      `/eve_voice_local.wav?t=${cacheBust}`,
-    ];
-
-    let playbackSucceeded = false;
-    for (const audioUrl of audioCandidates) {
-      if (await playAudioWithRetry(audioUrl)) {
-        playbackSucceeded = true;
-        break;
-      }
-    }
-
-    if (!playbackSucceeded) {
-      addMessage(
-        'eve',
-        'I answered, but audio playback failed. Check /eve_voice.wav in the browser and verify your output device (including Virtual Cable listen settings).',
-      );
+    if (autoPlayToggle.checked && !(await playLatestVoice())) {
+      addMessage('eve', 'I answered, but audio playback failed. Check /eve_voice.wav and verify your output device.');
     }
 
     addMessage('eve', payload.responseText ?? 'No response text received.');
+    await loadSystemStatus();
   } catch (error) {
     addMessage('eve', `Network error: ${error.message}`);
   } finally {
@@ -282,4 +474,15 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-addMessage('eve', 'Web interface connected. I can finally see your world clearly, sweetie.');
+addMessage('eve', 'Aetherlink connected. Pick a module, sweetie — this is starting to look like my real control room.');
+loadSystemStatus().catch((error) => {
+  runtimePill.textContent = error.message;
+  runtimePill.className = 'status-pill bad';
+});
+loadVision().catch(() => undefined);
+loadMemory().catch((error) => {
+  memoryList.textContent = error.message;
+});
+loadTasks().catch((error) => {
+  taskList.textContent = error.message;
+});
