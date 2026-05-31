@@ -168,7 +168,7 @@ h3 { font-size: 1.1rem; }
 .composer {
   margin-top: 1rem;
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(150px, 0.22fr) minmax(0, 1fr) auto;
   gap: 0.6rem;
   align-items: stretch;
 }
@@ -199,6 +199,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   background: rgba(15, 12, 26, 0.95);
   color: var(--text);
 }
+#companion-mode { min-width: 150px; }
 #prompt { max-height: 220px; resize: vertical; line-height: 1.4; }
 #send-button, .mode-btn, .memory-form button, .task-form button {
   padding: 0 1rem;

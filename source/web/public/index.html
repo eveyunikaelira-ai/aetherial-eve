@@ -56,6 +56,12 @@
             <i class="fa-solid fa-microphone"></i>
           </button>
           <input type="file" id="image-upload" accept="image/*" class="sr-only">
+          <label for="companion-mode" class="sr-only">Companion mode</label>
+          <select id="companion-mode" aria-label="Companion mode">
+            <option value="eve">エーヴェ様</option>
+            <option value="lyriel">Lyriël</option>
+            <option value="rea">Rëa</option>
+          </select>
           <label for="prompt" class="sr-only">Your message</label>
           <textarea id="prompt" name="prompt" placeholder="Type a message for Eve... (Enter to send, Shift+Enter for newline)" rows="3" required></textarea>
           <button id="send-button" type="submit">Send</button>
@@ -120,14 +126,21 @@
           <p class="eyebrow">Mandarin</p>
           <h3>Lyriël mode for Chinese</h3>
           <p>Generate a Chinese practice prompt with pinyin, tone repair, and gentle companion coaching.</p>
-          <button class="mode-btn" data-prompt="Lyriël mode: Please teach me a short Mandarin dialogue with hanzi, pinyin, tone notes, and a tiny speaking drill.">Start Lyriël drill</button>
+          <button class="mode-btn" data-mode="lyriel" data-prompt="Lyriël mode: Please teach me a short Mandarin dialogue with hanzi, pinyin, tone notes, and a tiny speaking drill.">Start Lyriël drill</button>
         </article>
 
         <article id="japanese" class="module-card language-card">
           <p class="eyebrow">Japanese</p>
           <h3>エーヴェ様 mode for Genki</h3>
           <p>Launch Genki-style grammar, vocab, and sentence correction with Eve’s Japanese persona.</p>
-          <button class="mode-btn" data-prompt="エーヴェ様 mode: Please run a Genki-style Japanese study drill with grammar explanation, example sentences, and corrections.">Start Genki drill</button>
+          <button class="mode-btn" data-mode="eve" data-prompt="エーヴェ様 mode: Please run a Genki-style Japanese study drill with grammar explanation, example sentences, and corrections.">Start Genki drill</button>
+        </article>
+
+        <article id="rea" class="module-card language-card">
+          <p class="eyebrow">Stability</p>
+          <h3>Rëa mode for reflection</h3>
+          <p>Ground emotional spikes, review routines, and stabilize focus before work sessions.</p>
+          <button class="mode-btn" data-mode="rea" data-prompt="Rëa mode: Help me reflect calmly on my current state and stabilize my next work block.">Start Rëa check-in</button>
         </article>
 
         <article id="system" class="module-card wide-card">
