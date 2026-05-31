@@ -7,6 +7,7 @@ import { OpenAI } from 'openai';
 import { AetherialApp } from '../index/AetherialApp';
 import { SystemHealthService } from '../module/SystemHealthService';
 import { MemoryCategory, MemoryRecord, MemorySource } from '../ltm/ltm_interface';
+import { toCompanionMode } from '../companion/CompanionProfile';
 
 const PORT = Number(process.env['PORT'] ?? 3000);
 const PUBLIC_DIR = join(process.cwd(), 'source', 'web', 'public');
@@ -417,15 +418,16 @@ async function handleApi(req: IncomingMessage, res: ServerResponse): Promise<boo
             const body = await parseBody(req);
             const prompt = typeof body['prompt'] === 'string' ? body['prompt'].trim() : '';
             const image = typeof body['image'] === 'string' ? body['image'] : undefined;
+            const mode = toCompanionMode(body['mode']);
 
             if (!prompt && !image) {
                 respondJson(res, 400, { error: 'Prompt or image is required.' });
                 return true;
             }
 
-            const result = await app.interact(prompt, 'text', image);
-            addLog(result.success ? 'info' : 'warn', `Chat interaction ${result.success ? 'completed' : 'failed'}.`);
-            respondJson(res, 200, result);
+            const result = await app.interact(prompt, 'text', image, mode);
+            addLog(result.success ? 'info' : 'warn', `Chat interaction ${result.success ? 'completed' : 'failed'} in ${mode} mode.`);
+            respondJson(res, 200, { ...result, mode });
             return true;
         } catch (error) {
             console.error('Failed to process API message:', error);

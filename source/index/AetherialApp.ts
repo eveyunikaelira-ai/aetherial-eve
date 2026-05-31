@@ -4,6 +4,8 @@ import { MicWhisper } from "../stt/MicWhisper";
 import { VTubeBridge } from '../module/VTubeBridge';
 import { ObsVision } from '../module/ObsVision';
 import { TtsCoqui } from '../tts/TtsCoqui';
+import { getCompanionProfile, toCompanionMode } from '../companion/CompanionProfile';
+import { CompanionPromptService } from '../companion/CompanionPromptService';
 
 export type InteractionMode = 'text' | 'speech';
 
@@ -30,6 +32,7 @@ export class AetherialApp {
     private eveEars?: MicWhisper;
     private eveBody?: VTubeBridge;
     private eveEyes?: ObsVision;
+    private readonly companionPrompts = new CompanionPromptService();
     private initialized = false;
 
     async init(): Promise<void> {
@@ -57,7 +60,7 @@ export class AetherialApp {
         return this.requireEars().listenAndTranscribe();
     }
 
-    async interact(userPrompt: string, mode: InteractionMode = 'text', uploadedImage?: string): Promise<AetherialReply> {
+    async interact(userPrompt: string, mode: InteractionMode = 'text', uploadedImage?: string, companionModeInput?: unknown): Promise<AetherialReply> {
         if (!this.initialized) {
             throw new Error('AetherialApp not initialized');
         }
@@ -82,7 +85,16 @@ export class AetherialApp {
         }
 
 
-        const response = await this.requireBrain().generate(userPrompt, finalImage);
+        const companionMode = toCompanionMode(companionModeInput);
+        const modePrefix = await this.companionPrompts.buildModePrefix(companionMode);
+        const routedPrompt = [
+            modePrefix,
+            '',
+            'User message:',
+            userPrompt,
+        ].join('\n');
+
+        const response = await this.requireBrain().generate(routedPrompt, finalImage);
         if (!(response.success && response.value)) {
             return {
                 success: false,
@@ -107,7 +119,8 @@ export class AetherialApp {
         
 
         const speakerLabel = mode === 'speech' ? 'speech' : 'text';
-        console.log(`[エーヴェ様:${speakerLabel} (${emotion})]: "${spokenText}"`);
+        const companionProfile = getCompanionProfile(companionMode);
+        console.log(`[${companionProfile.name}:${speakerLabel} (${emotion})]: "${spokenText}"`);
 
         return {
             success: true,

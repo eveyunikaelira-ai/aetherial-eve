@@ -1,6 +1,7 @@
 const chat = document.getElementById('chat-log');
 const form = document.getElementById('chat-form');
 const promptInput = document.getElementById('prompt');
+const companionMode = document.getElementById('companion-mode');
 const sendButton = document.getElementById('send-button');
 const micButton = document.getElementById('mic-button');
 const imageUpload = document.getElementById('image-upload');
@@ -41,6 +42,7 @@ function wait(ms) {
 
 function setControlsDisabled(disabled) {
   sendButton.disabled = disabled;
+  companionMode.disabled = disabled;
   if (micButton) {
     micButton.disabled = disabled || !sttReadyToggle.checked;
   }
@@ -426,6 +428,9 @@ refreshSystem.addEventListener('click', loadSystemStatus);
 document.querySelectorAll('.mode-btn').forEach((button) => {
   button.addEventListener('click', () => {
     promptInput.value = button.dataset.prompt;
+    if (button.dataset.mode) {
+      companionMode.value = button.dataset.mode;
+    }
     promptInput.focus();
     document.getElementById('chat').scrollIntoView({ behavior: 'smooth' });
   });
@@ -457,7 +462,7 @@ form.addEventListener('submit', async (event) => {
     const payload = await fetchJson('/api/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt, image: imageToSend }),
+      body: JSON.stringify({ prompt, image: imageToSend, mode: companionMode.value }),
     });
 
     if (autoPlayToggle.checked && !(await playLatestVoice())) {
